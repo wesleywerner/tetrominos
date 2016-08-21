@@ -13,19 +13,17 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-// Wrap our code in a closure to avoid global pollution
+// Wrap our code in a closure to avoid variable pollution
 (function() {
 
   // create one global "tero" object that contains our game
   var tetro = window.tetro = { };
-  
-  // link our functions to our exposed object
   tetro.clamp = clamp;
   tetro.setup = setup;
-  tetro.initializeData = initializeData;
+  tetro.resetGame = resetGame;
+  tetro.redraw = function () { console.warn('Hook into the tetro.redraw callback') };
   tetro.array2d = array2d;
   tetro.arrayRow = arrayRow;
-  tetro.draw = draw;
   tetro.foreachShapeCell = foreachShapeCell;
   tetro.foreachFieldCell = foreachFieldCell;
   tetro.foreachFieldRow = foreachFieldRow;
@@ -33,13 +31,11 @@
   tetro.rotateShape = rotateShape;
   tetro.update = update;
   tetro.dirtyShape = dirtyShape;
-  tetro.handleKeyboardDown = handleKeyboardDown;
   tetro.inbounds = inbounds;
   tetro.hitsolid = hitsolid;
   tetro.solidify = solidify;
   tetro.clearlines = clearlines;
   tetro.nextShape = nextShape;
-  tetro.buildHTMLTable = buildHTMLTable;
   
   /**
    * helper to limit a value to a minimum and maximum.
@@ -123,37 +119,8 @@
   function setup () {
     
     // play field dimensions
-    this.width = 10;
-    this.height = 22;
-    
-    // prepare game data and view
-    this.initializeData();
-    this.buildHTMLTable();
-    
-    // attach controller
-    window.addEventListener(
-      "keydown", tetro.handleKeyboardDown, false
-    );
-
-    // render timer
-    var that = this;
-    //window.setInterval(function() { that.draw() }, 100);
-    window.setInterval(function() { that.update() }, 1000);
-    
-    console.log ('game loaded');
-  }
-  
-  // initialize game data
-  function initializeData () {
-    
-    // index playfield positions via a 2-dimensional array: [row][col]
-    //this.data = this.array2d(0);
-    
-    // store fixed shapes that become part of the play field when dropped
-    this.fixed = this.array2d(0);
-    
-    // track dirty positions: those changed during an update
-    this.dirty = this.array2d(true);
+    tetro.width = 10;
+    tetro.height = 22;
     
     // load preset shapes
     this.shapes = [ ];
@@ -223,68 +190,31 @@
       '#d33682',    // 9 magenta
     ];
     
+    tetro.resetGame();
+    
+    // fire callback to set up the attached view
+    if (tetro.initializeView != undefined) tetro.initializeView();
+    
+    // render timer
+    window.setInterval(function() { tetro.update() }, 1000);
+    
+    console.log ('game loaded');
+  }
+
+  
+  /**
+   * Reset the play field.
+   */
+  function resetGame () {
+    
+    // store fixed shapes that become part of the play field when dropped
+    this.fixed = this.array2d(0);
+    
+    // track dirty positions: those changed during an update
+    this.dirty = this.array2d(true);
+    
     this.nextShape();
     
-  }
-  
-  
-  // keyboard controls
-  function handleKeyboardDown (event) {
-    
-    var left = 37;
-    var up = 38;
-    var right = 39;
-    var down = 40;
-    
-    if (event.keyCode == left) {
-      tetro.moveShape (0, -1);
-    }
-    if (event.keyCode == right) {
-      tetro.moveShape (0, 1);
-    }
-    if (event.keyCode == up) {
-      tetro.rotateShape();
-    }
-    if (event.keyCode == down) {
-      tetro.moveShape (1, 0);
-    }
-  }
-  
-  // create a html table to display our game
-  function buildHTMLTable () {
-    
-    // store the view cells in an array for quick access
-    var view = this.view = [ ];
-    
-    // create a html table
-    var table = document.createElement('table');
-    table.style.borderSpacing = '0';
-    table.setAttribute('border', '0');
-    table.setAttribute('cellpadding', '0');
-    
-    for (var i=0; i<this.height; i++) {
-      
-      var row = document.createElement('tr');
-
-      // fill rows with empty values
-      view[i] = [ ];
-      
-      for (var n=0; n<this.width; n++) {
-        var cell = document.createElement('td');
-        //cell.textContent = 'X';
-        cell.style.border = 'solid 1px #073642';
-        //cell.style.backgroundColor = 'black';
-        cell.style.color = '';
-        cell.style.width = '15px';
-        cell.style.height = '15px';
-        view[i].push(cell);
-        row.appendChild(cell);
-      }
-      
-      table.appendChild(row);
-    }
-    
-    document.body.appendChild(table);
   }
   
   
@@ -293,39 +223,6 @@
     
     tetro.moveShape (1, 0);
 
-  }
-  
-  
-  /**
-   * Draws the play field and current shape.
-   */
-  function draw () {
-
-    // play field
-    tetro.foreachFieldCell (function (row, col) {
-        
-      // only bother drawing dirty cells
-      if (tetro.dirty[row][col] == true) {
-        
-        var playfieldValue = tetro.fixed[row][col];
-        var colour = tetro.colours[playfieldValue];
-        
-        // set background colour
-        tetro.view[row][col].style.backgroundColor = colour;
-        
-        // clean
-        tetro.dirty[row][col] = false;
-        
-      }
-    });
-    
-    // draw the current shape
-    tetro.foreachShapeCell (tetro.current, tetro.position, function (position, value) {
-      if (value > 0) {
-        tetro.view[position.row][position.col].style.backgroundColor = tetro.colours[value];
-      }
-    });
-    
   }
   
   
@@ -461,7 +358,7 @@
     var hit = tetro.hitsolid (shape, newpos);
 
     if (hit) {
-      tetro.initializeData();
+      tetro.resetGame();
     }
     
     tetro.position = newpos;
@@ -489,14 +386,14 @@
       if (hit) {
         tetro.solidify();
         tetro.nextShape();
-        tetro.draw();
+        tetro.redraw();
         return;
       }
     }
     
     var validbounds = tetro.inbounds(tetro.current, newpos);
     if (validbounds && !hit) tetro.position = newpos;
-    tetro.draw();
+    tetro.redraw();
     
   }
   
@@ -520,12 +417,8 @@
     if (validbounds && !hit) {
       tetro.dirtyShape();
       tetro.current = a;
-      tetro.draw();
+      tetro.redraw();
     }
   }
   
-  
-  // begin here
-  tetro.setup();
-
 })();
