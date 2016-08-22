@@ -21,7 +21,7 @@
   tetro.clamp = clamp;
   tetro.setup = setup;
   tetro.resetGame = resetGame;
-  tetro.redraw = function () { console.warn('Hook into the tetro.redraw callback') };
+  tetro.redraw = redraw;
   tetro.array2d = array2d;
   tetro.arrayRow = arrayRow;
   tetro.foreachShapeCell = foreachShapeCell;
@@ -36,6 +36,12 @@
   tetro.solidify = solidify;
   tetro.clearlines = clearlines;
   tetro.nextShape = nextShape;
+  tetro.scored = scored;
+  
+  // score received per line cleared
+  tetro.linescore = 10;
+  // multiplier per each additional line
+  tetro.multiplier = 2;
   
   /**
    * helper to limit a value to a minimum and maximum.
@@ -43,7 +49,6 @@
   function clamp (min, value, max) {
     return Math.min (Math.max (value, min), max);
   }
-  
 
   /**
    * a helper function to create a square 2-dimensional array.
@@ -59,7 +64,6 @@
     return data;
   }
   
-  
   /**
    * a helper function to create a row array.
    */
@@ -68,7 +72,6 @@
     arr.fill(value);
     return arr;
   }
-  
   
   /**
    * helper function to loop over each cell in a shape.
@@ -93,7 +96,6 @@
     }
   }
   
-  
   /**
    * helper function to loop over each cell in the play field.
    */
@@ -114,6 +116,19 @@
     }
   }
   
+  /**
+   * Placehold for the redraw callback.
+   */
+  function redraw () {
+    console.warn('Hook into the tetro.redraw callback');
+  }
+  
+  /**
+   * Placeholder for the callback when score changes.
+   */
+  function scored () {
+    console.warn('Hook into the tetro.scored callback');
+  }
   
   // define game logic
   function setup () {
@@ -200,7 +215,6 @@
     
     console.log ('game loaded');
   }
-
   
   /**
    * Reset the play field.
@@ -215,8 +229,9 @@
     
     this.nextShape();
     
+    tetro.score = 0;
+    
   }
-  
   
   // update piece
   function update () {
@@ -224,7 +239,6 @@
     tetro.moveShape (1, 0);
 
   }
-  
   
   /**
    * mark the positions of the current shape dirty
@@ -237,7 +251,6 @@
       }
     });
   }
-
 
   /**
    * tests if a shape fits in the play field.
@@ -260,7 +273,6 @@
     
   }
   
-  
   // tests if a piece and position hits a solid on the fixed matrix
   function hitsolid (shape, position) {
 
@@ -281,7 +293,6 @@
     return hit || false;
   }
   
-  
   /**
    * merge the current shape into the play field.
    */
@@ -300,7 +311,6 @@
     
     tetro.clearlines();
   }
-  
   
   /**
    * clears any completed lines.
@@ -333,11 +343,12 @@
     
     // mark the entire field dirty for redraw
     if (count > 0) {
+      tetro.score += count * (tetro.linescore * tetro.multiplier * count);
       tetro.dirty = tetro.array2d(true);
+      tetro.scored(tetro.score);
     }
   
   }
-  
   
   /**
    * choose a new piece and reset position.
@@ -364,7 +375,6 @@
     tetro.position = newpos;
     tetro.current = shape;
   }
-  
   
   // move the current piece position
   function moveShape (row, col) {
@@ -396,7 +406,6 @@
     tetro.redraw();
     
   }
-  
   
   /**
    * turn the current shape.

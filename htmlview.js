@@ -92,6 +92,13 @@
     });
     
   }
+  
+  /**
+   * Display the current score.
+   */
+  function displayScore (score) {
+    document.getElementById('score').innerHTML = score.toString();
+  }
 
 
   /**
@@ -125,6 +132,7 @@
   // hook into the redraw and init callbacks
   tetro.redraw = updateHTMLTable;  
   tetro.initializeView = buildHTMLTable;
+  tetro.scored = displayScore;
   tetro.setup();
   
 })();
