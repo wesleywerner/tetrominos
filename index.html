@@ -29,21 +29,39 @@
   <style>
     body {
       background-color: black;
+      color: white;
     }
 	.center {
 	  display: block;
 	  margin-left: auto;
 	  margin-right: auto;
     }
-	h1 {
+	h3 {
 	  color: white;
 	  text-align: center;
+    display: inline;
 	}
+  #left {
+    float: left;
+    width: 20%;
+  }
+  #right {
+    float: right;
+    width: 20%;
+  }
   </style>
 </head>
 
 <body>
   <p><img src="logo.png" class="center" /></p>
+  <div id="left">
+    <h3>score: <span id="score">0</span></h3>
+  </div>
+  <div id="right">
+    &nbsp;
+  </div>
+  <div id="middle">
+  </div>
   <script src="tetrominos.js"></script>
   <script src="htmlview.js"></script>
 </body>

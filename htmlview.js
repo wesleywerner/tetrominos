@@ -61,7 +61,8 @@
       table.appendChild(row);
     }
     
-    document.body.appendChild(table);
+    var container = document.getElementById('middle');
+    container.appendChild(table);
   }
 
 
