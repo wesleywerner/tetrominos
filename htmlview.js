@@ -34,6 +34,10 @@
     table.style.borderSpacing = '0';
     table.setAttribute('border', '0');
     table.setAttribute('cellpadding', '0');
+	
+	// center the table
+	table.style.marginLeft = 'auto';
+	table.style.marginRight = 'auto';
     
     for (var i=0; i<this.height; i++) {
       
@@ -48,8 +52,8 @@
         cell.style.border = 'solid 1px #073642';
         //cell.style.backgroundColor = 'black';
         cell.style.color = '';
-        cell.style.width = '15px';
-        cell.style.height = '15px';
+        cell.style.width = '20px';
+        cell.style.height = '20px';
         view[i].push(cell);
         row.appendChild(cell);
       }
